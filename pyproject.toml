@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gospelo-backlog-docs"
+version = "1.0.0"
+description = "Upload Markdown documents to Backlog Wiki with image and MermaidJS support"
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "NoStudio LLC", email = "goro-hayakawa@no-studio.net"}
+]
+keywords = ["backlog", "wiki", "markdown", "mermaid", "documentation", "docs"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Documentation",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "types-requests>=2.28.0",
+]
+
+[project.scripts]
+gospelo-backlog-docs = "gospelo_backlog_docs.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/gorosun/gospelo-backlog-docs"
+Documentation = "https://github.com/gorosun/gospelo-backlog-docs#readme"
+Repository = "https://github.com/gorosun/gospelo-backlog-docs.git"
+Issues = "https://github.com/gorosun/gospelo-backlog-docs/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
