@@ -1,0 +1,22 @@
+# Gospelo FastAPI Configuration
+# This file is auto-detected by gospelo-fastapi MCP server
+
+apis:
+  - name: backlog-wiki-api
+    display_name: Backlog Wiki API
+    framework: fastapi
+    type: rest-api
+    source_path: src
+    app_module: main:app
+    description: FastAPI application for Backlog Wiki management
+    enabled: true
+    endpoints:
+      base_path: /api/v1
+      router_files:
+        - "**/*.py"
+    models:
+      - "models/**/*.py"
+      - "schemas/**/*.py"
+    output:
+      spec: docs/specs/backlog_wiki_api_spec.md
+      api_docs: docs/api/backlog-wiki-api/
