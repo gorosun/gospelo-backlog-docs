@@ -34,16 +34,26 @@ Markdown ドキュメントを Backlog Wiki にアップロードするツール
 
 ---
 
-Markdown ドキュメントを Backlog Wiki にアップロードするツールです。画像と MermaidJS 図のサポート付き。
+## v1.1.0 の新機能
+
+- **ディレクトリ一括処理** - ディレクトリ内の全 Markdown ファイルを一度にアップロード
+- **プログレス表示** - スピナーアニメーションとパーセンテージ、プログレスバー
+- 新オプション: `--no-recursive`, `--pattern`, `--exclude`, `--continue-on-error`
+
+詳細は[変更履歴](CHANGELOG_jp.md)を参照してください。
+
+---
 
 ## 機能
 
 - Markdown ファイルを Backlog Wiki にアップロード
+- **ディレクトリ一括アップロード**（再帰検索対応）
 - 画像の自動アップロードとリンク変換
 - MermaidJS 図の PNG 変換（mermaid-cli 必要）
 - H1 タイトルから Wiki ページ名を自動抽出
 - 階層構造の Wiki ページ名をサポート（例：`親/子/ページ`）
 - 柔軟な認証情報管理（CLI 引数、環境変数、.env ファイル）
+- **プログレス表示**（スピナーとパーセンテージ）
 
 ## インストール
 
@@ -83,37 +93,60 @@ cp .env.example ~/.config/gospelo-backlog-docs/.env
 ### 2. Markdown ファイルをアップロード
 
 ```bash
+# 単一ファイル
 gospelo-backlog-docs document.md --project PROJECT_KEY
+
+# ディレクトリ内の全ファイル（再帰的）
+gospelo-backlog-docs docs/ --project PROJECT_KEY
 ```
 
 ## 使用方法
 
 ```bash
-gospelo-backlog-docs <markdown_file> --project <PROJECT_KEY> [options]
+gospelo-backlog-docs <path> --project <PROJECT_KEY> [options]
 ```
 
 ### 引数
 
-| 引数              | 説明                                                     |
-| ----------------- | -------------------------------------------------------- |
-| `markdown_file`   | アップロードする Markdown ファイルのパス                 |
-| `--project, -p`   | Backlog プロジェクトキー（必須）                         |
-| `--wiki-name, -n` | Wiki ページ名（デフォルト：H1 タイトルまたはファイル名） |
-| `--space-id, -s`  | Backlog スペース ID                                      |
-| `--api-key, -k`   | Backlog API キー                                         |
-| `--domain, -d`    | Backlog ドメイン（デフォルト：backlog.jp）               |
-| `--env-file, -e`  | .env ファイルのパス                                      |
-| `--dry-run`       | 解析のみ、アップロードしない                             |
-| `--version, -v`   | バージョン表示                                           |
+| 引数                  | 説明                                               |
+| --------------------- | -------------------------------------------------- |
+| `path`                | Markdown ファイルまたはディレクトリのパス          |
+| `--project, -p`       | Backlog プロジェクトキー（必須）                   |
+| `--wiki-name, -n`     | Wiki ページ名（単一ファイルのみ）                  |
+| `--space-id, -s`      | Backlog スペース ID                                |
+| `--api-key, -k`       | Backlog API キー                                   |
+| `--domain, -d`        | Backlog ドメイン（デフォルト：backlog.jp）         |
+| `--env-file, -e`      | .env ファイルのパス                                |
+| `--dry-run`           | 解析のみ、アップロードしない                       |
+| `--no-recursive`      | サブディレクトリを検索しない                       |
+| `--pattern`           | ファイルパターン（デフォルト：*.md）               |
+| `--exclude`           | 除外パターン（複数回指定可能）                     |
+| `--continue-on-error` | エラー発生後も残りのファイルを処理                 |
+| `--version, -v`       | バージョン表示                                     |
 
 ### 使用例
 
 ```bash
-# 基本的なアップロード
+# 単一ファイルをアップロード
 gospelo-backlog-docs docs/design.md --project MYPROJECT
 
-# Wikiページ名を指定
+# Wikiページ名を指定（単一ファイルのみ）
 gospelo-backlog-docs docs/design.md --project MYPROJECT --wiki-name "設計/UI仕様"
+
+# ディレクトリ内の全Markdownファイルをアップロード（再帰的）
+gospelo-backlog-docs docs/ --project MYPROJECT
+
+# トップレベルのファイルのみ（サブディレクトリを除外）
+gospelo-backlog-docs docs/ --project MYPROJECT --no-recursive
+
+# specファイルのみをアップロード
+gospelo-backlog-docs docs/ --project MYPROJECT --pattern "*_spec.md"
+
+# READMEとドラフトファイルを除外
+gospelo-backlog-docs docs/ --project MYPROJECT --exclude "README.md" --exclude "*_draft.md"
+
+# エラーが発生しても処理を継続
+gospelo-backlog-docs docs/ --project MYPROJECT --continue-on-error
 
 # ドライラン（アップロードせずに解析のみ）
 gospelo-backlog-docs docs/design.md --project MYPROJECT --dry-run

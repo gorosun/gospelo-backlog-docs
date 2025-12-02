@@ -7,6 +7,24 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-12-03
+
+### 追加
+
+- ディレクトリ一括処理：複数のMarkdownファイルを一度にアップロード
+- 再帰的ディレクトリ検索（デフォルトで有効）
+- `--no-recursive` フラグでサブディレクトリ検索を無効化
+- `--pattern` オプションでカスタムファイルパターンを指定（デフォルト: `*.md`）
+- `--exclude` オプションでファイルを除外（複数回指定可能）
+- `--continue-on-error` フラグでエラー後も処理を継続
+- 進捗表示 `[1/10] Processing: file.md`
+- 成功/失敗件数のサマリーレポート
+
+### 変更
+
+- 位置引数を `markdown_file` から `path` に変更（ファイルまたはディレクトリを受け付け）
+- 複数ファイル処理時は `--wiki-name` を無視（警告を表示）
+
 ## [1.0.0] - 2025-11-26
 
 ### 追加
@@ -34,5 +52,6 @@
 
 - mermaid-cli（npmパッケージ）：MermaidJSサポート用
 
-[Unreleased]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gorosun/gospelo-backlog-docs/releases/tag/v1.0.0

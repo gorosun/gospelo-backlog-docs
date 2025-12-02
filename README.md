@@ -31,14 +31,26 @@ A documentation tool for engineers that delivers "words of salvation" to the doc
 
 ---
 
+## What's New in v1.1.0
+
+- **Directory batch processing** - Upload all Markdown files from a directory at once
+- **Progress display** - Animated spinner with percentage and progress bar
+- New options: `--no-recursive`, `--pattern`, `--exclude`, `--continue-on-error`
+
+See [Changelog](https://github.com/gorosun/gospelo-backlog-docs/blob/main/docs/CHANGELOG.md) for full details.
+
+---
+
 ## Features
 
 - Upload Markdown files to Backlog Wiki
+- **Batch upload from directories** with recursive search
 - Automatic image upload and link conversion
 - MermaidJS diagram conversion to PNG (requires mermaid-cli)
 - Extract wiki page name from H1 title
 - Support for hierarchical wiki page names (e.g., `Parent/Child/Page`)
 - Flexible credential management (CLI args, environment variables, .env files)
+- **Progress display** with spinner and percentage
 
 ## Installation
 
@@ -75,40 +87,63 @@ cp .env.example ~/.config/gospelo-backlog-docs/.env
 # Edit the file with your credentials
 ```
 
-### 2. Upload a Markdown file
+### 2. Upload Markdown files
 
 ```bash
+# Single file
 gospelo-backlog-docs document.md --project PROJECT_KEY
+
+# All files in a directory (recursive)
+gospelo-backlog-docs docs/ --project PROJECT_KEY
 ```
 
 ## Usage
 
 ```bash
-gospelo-backlog-docs <markdown_file> --project <PROJECT_KEY> [options]
+gospelo-backlog-docs <path> --project <PROJECT_KEY> [options]
 ```
 
 ### Arguments
 
-| Argument          | Description                                       |
-| ----------------- | ------------------------------------------------- |
-| `markdown_file`   | Path to the Markdown file to upload               |
-| `--project, -p`   | Backlog project key (required)                    |
-| `--wiki-name, -n` | Wiki page name (defaults to H1 title or filename) |
-| `--space-id, -s`  | Backlog space ID                                  |
-| `--api-key, -k`   | Backlog API key                                   |
-| `--domain, -d`    | Backlog domain (default: backlog.jp)              |
-| `--env-file, -e`  | Path to .env file                                 |
-| `--dry-run`       | Parse only, do not upload                         |
-| `--version, -v`   | Show version                                      |
+| Argument              | Description                                            |
+| --------------------- | ------------------------------------------------------ |
+| `path`                | Path to Markdown file or directory                     |
+| `--project, -p`       | Backlog project key (required)                         |
+| `--wiki-name, -n`     | Wiki page name (only for single file)                  |
+| `--space-id, -s`      | Backlog space ID                                       |
+| `--api-key, -k`       | Backlog API key                                        |
+| `--domain, -d`        | Backlog domain (default: backlog.jp)                   |
+| `--env-file, -e`      | Path to .env file                                      |
+| `--dry-run`           | Parse only, do not upload                              |
+| `--no-recursive`      | Do not search subdirectories                           |
+| `--pattern`           | File pattern to match (default: *.md)                  |
+| `--exclude`           | Patterns to exclude (can be specified multiple times)  |
+| `--continue-on-error` | Continue uploading remaining files even if one fails   |
+| `--version, -v`       | Show version                                           |
 
 ### Examples
 
 ```bash
-# Basic upload
+# Upload a single file
 gospelo-backlog-docs docs/design.md --project MYPROJECT
 
-# Specify wiki page name
+# Specify wiki page name (single file only)
 gospelo-backlog-docs docs/design.md --project MYPROJECT --wiki-name "Design/UI Spec"
+
+# Upload all Markdown files in a directory (recursive)
+gospelo-backlog-docs docs/ --project MYPROJECT
+
+# Upload only top-level files (no subdirectories)
+gospelo-backlog-docs docs/ --project MYPROJECT --no-recursive
+
+# Upload only spec files
+gospelo-backlog-docs docs/ --project MYPROJECT --pattern "*_spec.md"
+
+# Exclude README and draft files
+gospelo-backlog-docs docs/ --project MYPROJECT --exclude "README.md" --exclude "*_draft.md"
+
+# Continue uploading even if some files fail
+gospelo-backlog-docs docs/ --project MYPROJECT --continue-on-error
 
 # Dry run (parse without uploading)
 gospelo-backlog-docs docs/design.md --project MYPROJECT --dry-run
@@ -178,15 +213,15 @@ Hierarchical names are supported:
 
 ## Documentation
 
-- [Japanese README](docs/README_jp.md)
-- [Changelog](docs/CHANGELOG.md)
-- [Contributing Guide](docs/CONTRIBUTING.md)
-- [Test Report](docs/test/test_report.md)
+- [Japanese README](https://github.com/gorosun/gospelo-backlog-docs/blob/main/docs/README_jp.md)
+- [Changelog](https://github.com/gorosun/gospelo-backlog-docs/blob/main/docs/CHANGELOG.md)
+- [Contributing Guide](https://github.com/gorosun/gospelo-backlog-docs/blob/main/docs/CONTRIBUTING.md)
+- [Test Report](https://github.com/gorosun/gospelo-backlog-docs/blob/main/docs/test/test_report.md)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](https://github.com/gorosun/gospelo-backlog-docs/blob/main/LICENSE) for details.
 
 ## Third-Party Licenses
 
-See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for dependency licenses.
+See [THIRD_PARTY_LICENSES.md](https://github.com/gorosun/gospelo-backlog-docs/blob/main/THIRD_PARTY_LICENSES.md) for dependency licenses.

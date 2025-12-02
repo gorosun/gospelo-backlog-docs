@@ -4,7 +4,7 @@
 
 Gospelo-backlog-docs パッケージの単体テスト実行結果レポートです。
 
-**実行日時**: 2025-11-26
+**実行日時**: 2025-12-03
 **Python バージョン**: 3.12.8
 **pytest バージョン**: 7.4.4
 
@@ -39,12 +39,12 @@ Gospelo-backlog-docs パッケージの単体テスト実行結果レポート�
 | `backlog_client.py`    | API コールをモック   | 実際の API は統合テストで検証      |
 | `mermaid_converter.py` | 外部コマンドをモック | CI 環境で mmdc 不要にするため      |
 | `uploader.py`          | 主要フローをテスト   | 各コンポーネントの結合部分         |
-| `cli.py`               | テストなし           | 単純なエントリポイント             |
+| `cli.py`               | collect 関数をテスト | ファイル収集ロジックはバグが起きやすい |
 | `__main__.py`          | テストなし           | cli.main()を呼ぶだけの 3 行        |
 
 ### カバレッジ目標
 
-- **全体目標**: 70%以上（達成: 73%）
+- **全体目標**: 70%以上（達成: 74%）
 - **主要ロジック**: 80%以上（markdown_parser: 91%, mermaid_converter: 82%）
 - **100%を目指さない理由**: テストのためのテストを避け、メンテナンス性を優先
 
@@ -54,11 +54,11 @@ Gospelo-backlog-docs パッケージの単体テスト実行結果レポート�
 
 | 項目       | 値    |
 | ---------- | ----- |
-| 総テスト数 | 82    |
-| 成功       | 81    |
+| 総テスト数 | 111   |
+| 成功       | 110   |
 | 失敗       | 0     |
 | スキップ   | 1     |
-| 実行時間   | 0.18s |
+| 実行時間   | 0.19s |
 
 ## カバレッジレポート
 
@@ -67,15 +67,16 @@ Gospelo-backlog-docs パッケージの単体テスト実行結果レポート�
 | `__init__.py`          | 5              | 0        | 100%       |
 | `__main__.py`          | 3              | 3        | 0%         |
 | `backlog_client.py`    | 128            | 33       | 74%        |
-| `cli.py`               | 29             | 29       | 0%         |
+| `cli.py`               | 62             | 33       | 47%        |
 | `markdown_parser.py`   | 76             | 7        | 91%        |
 | `mermaid_converter.py` | 71             | 13       | 82%        |
 | `uploader.py`          | 142            | 38       | 73%        |
-| **合計**               | **454**        | **123**  | **73%**    |
+| **合計**               | **487**        | **127**  | **74%**    |
 
 ### カバレッジ補足
 
-- `cli.py`, `__main__.py`: CLI エントリポイントのため、統合テストでカバー
+- `cli.py`: `collect_markdown_files` 関数は単体テストでカバー、`main` 関数は統合テストでカバー
+- `__main__.py`: CLI エントリポイントのため、統合テストでカバー
 - `mermaid_converter.py`: 外部コマンド（mmdc）依存部分はモックでテスト
 - 主要なビジネスロジックは 70%以上のカバレッジを達成
 
@@ -84,10 +85,11 @@ Gospelo-backlog-docs パッケージの単体テスト実行結果レポート�
 ```
 tests/
 ├── __init__.py
+├── test_cli.py                # 27 tests (v1.1.0で追加)
 ├── test_markdown_parser.py    # 17 tests
 ├── test_backlog_client.py     # 22 tests
 ├── test_mermaid_converter.py  # 24 tests
-└── test_uploader.py           # 19 tests
+└── test_uploader.py           # 21 tests
 ```
 
 ## テストケース詳細
@@ -171,6 +173,9 @@ tests/
 #### TestWikiUploader
 
 - `test_init` - 初期化
+- `test_init_with_quiet_mode` - quietモードでの初期化
+- `test_log_outputs_when_not_quiet` - 非quietモードでログ出力
+- `test_log_suppressed_when_quiet` - quietモードでログ抑制
 - `test_init_with_mermaid` - Mermaid 有効時の初期化
 - `test_generate_mermaid_filename` - ファイル名生成
 - `test_generate_mermaid_filename_unique` - ユニーク性
@@ -190,6 +195,41 @@ tests/
 #### TestWikiUploaderHierarchicalName
 
 - `test_hierarchical_wiki_name` - 階層構造 Wiki 名
+
+### test_cli.py (27 tests) - v1.1.0 で追加
+
+#### TestCollectMarkdownFiles (13 tests)
+
+- `test_single_file` - 単一 Markdown ファイルの収集
+- `test_single_file_non_markdown` - 非 Markdown ファイルは無視
+- `test_directory_flat` - フラットディレクトリからファイル収集
+- `test_directory_recursive` - 再帰的ディレクトリ検索
+- `test_directory_non_recursive` - 非再帰的ディレクトリ検索
+- `test_custom_pattern` - カスタムファイルパターン
+- `test_exclude_pattern` - パターンによるファイル除外
+- `test_exclude_multiple_patterns` - 複数パターンの除外
+- `test_empty_directory` - 空ディレクトリ
+- `test_nonexistent_path` - 存在しないパス
+- `test_sorted_results` - 結果のソート順
+- `test_deep_nesting` - 深いネストのディレクトリ
+- `test_case_insensitive_extension` - 大文字小文字を区別しない拡張子
+
+#### TestProgressSpinner (14 tests)
+
+- `test_init` - スピナーの初期化
+- `test_get_progress_bar_empty` - 0%のプログレスバー
+- `test_get_progress_bar_half` - 50%のプログレスバー
+- `test_get_progress_bar_full` - 100%のプログレスバー
+- `test_get_progress_bar_zero_total` - 合計0のプログレスバー
+- `test_get_percentage_zero` - 0%のパーセンテージ
+- `test_get_percentage_half` - 50%のパーセンテージ
+- `test_get_percentage_full` - 100%のパーセンテージ
+- `test_get_percentage_zero_total` - 合計0のパーセンテージ
+- `test_stop_increments_current` - stop()でカウンター増加
+- `test_stop_success_icon` - 成功時にチェックマーク表示
+- `test_stop_failure_icon` - 失敗時に×マーク表示
+- `test_finish_prints_newline` - finish()で改行出力
+- `test_spinner_frames_constant` - スピナーフレームの定義
 
 ### test_mermaid_converter.py (24 tests)
 
@@ -304,29 +344,30 @@ jobs:
 
 ### 現状の評価
 
-| 観点               | 評価 | 説明                                               |
-| ------------------ | ---- | -------------------------------------------------- |
-| ビジネスロジック   | ◎    | 主要ロジック（パーサー、変換、アップロード）を網羅 |
-| エッジケース       | ◎    | 空ファイル、絵文字、階層構造タイトル等をカバー     |
-| エラーハンドリング | ○    | タイムアウト、ファイル不在、API 失敗をテスト       |
-| モック戦略         | ◎    | 外部依存を適切にモック化、CI/CD で安定動作         |
-| メンテナンス性     | ◎    | 82 テスト/0.18 秒、高速で実行可能                  |
+| 観点               | 評価 | 説明                                                     |
+| ------------------ | ---- | -------------------------------------------------------- |
+| ビジネスロジック   | ◎    | 主要ロジック（パーサー、変換、アップロード、CLI）を網羅  |
+| エッジケース       | ◎    | 空ファイル、絵文字、階層構造タイトル、深いネスト等をカバー |
+| エラーハンドリング | ○    | タイムアウト、ファイル不在、API 失敗をテスト             |
+| モック戦略         | ◎    | 外部依存を適切にモック化、CI/CD で安定動作               |
+| メンテナンス性     | ◎    | 111 テスト/0.19 秒、高速で実行可能                       |
 
 ### カバレッジ 0%のファイルについて
 
-| ファイル      | カバレッジ | 判断       | 理由                                    |
-| ------------- | ---------- | ---------- | --------------------------------------- |
-| `cli.py`      | 0%         | テスト不要 | argparse の定義と uploader 呼び出しのみ |
-| `__main__.py` | 0%         | テスト不要 | `cli.main()`を呼ぶだけの 3 行           |
+| ファイル      | カバレッジ | 判断       | 理由                                  |
+| ------------- | ---------- | ---------- | ------------------------------------- |
+| `__main__.py` | 0%         | テスト不要 | `cli.main()`を呼ぶだけの 3 行         |
 
-これらは「グルーコード」であり、ロジックは他モジュールでテスト済みです。
+`__main__.py` は「グルーコード」であり、ロジックは他モジュールでテスト済みです。
+
+`cli.py` は v1.1.0 で `collect_markdown_files` 関数が追加され、47%のカバレッジを達成しています。`main` 関数（argparse 定義と uploader 呼び出し）は統合テストでカバーされます。
 
 ### 結論
 
 **現状のテストは適切な品質を確保しています。**
 
 - リスクの高い部分に集中したテスト設計
-- 73%のカバレッジは業界標準（70-80%）の範囲内
+- 74%のカバレッジは業界標準（70-80%）の範囲内
 - 過剰なテストによるメンテナンスコスト増加を回避
 
 ---

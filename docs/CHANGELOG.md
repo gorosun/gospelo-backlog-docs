@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-12-03
+
+### Added
+
+- Directory batch processing: upload multiple Markdown files at once
+- Recursive directory search (enabled by default)
+- `--no-recursive` flag to disable subdirectory search
+- `--pattern` option for custom file patterns (default: `*.md`)
+- `--exclude` option for excluding files by pattern (can be used multiple times)
+- `--continue-on-error` flag to continue processing after failures
+- Progress indicator showing `[1/10] Processing: file.md`
+- Summary report showing success/failure counts
+
+### Changed
+
+- Positional argument renamed from `markdown_file` to `path` to accept files or directories
+- `--wiki-name` is now ignored when processing multiple files (with warning)
+
 ## [1.0.0] - 2025-11-26
 
 ### Added
@@ -34,5 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - mermaid-cli (npm package) for MermaidJS support
 
-[Unreleased]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/gorosun/gospelo-backlog-docs/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/gorosun/gospelo-backlog-docs/releases/tag/v1.0.0

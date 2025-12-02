@@ -4,7 +4,7 @@
 
 Unit test execution report for the gospelo-backlog-docs package.
 
-**Execution Date**: 2025-11-26
+**Execution Date**: 2025-12-03
 **Python Version**: 3.12.8
 **pytest Version**: 7.4.4
 
@@ -39,12 +39,12 @@ This project adopts a **risk-based testing approach**.
 | `backlog_client.py` | Mock API calls | Actual API verified in integration tests |
 | `mermaid_converter.py` | Mock external commands | Eliminates mmdc requirement in CI |
 | `uploader.py` | Test main flows | Integration point of components |
-| `cli.py` | No tests | Simple entry point |
+| `cli.py` | Test collect function | Directory batch processing logic |
 | `__main__.py` | No tests | Only 3 lines calling cli.main() |
 
 ### Coverage Goals
 
-- **Overall Target**: 70%+ (Achieved: 73%)
+- **Overall Target**: 70%+ (Achieved: 74%)
 - **Core Logic**: 80%+ (markdown_parser: 91%, mermaid_converter: 82%)
 - **Why not 100%**: Avoid "tests for the sake of tests", prioritize maintainability
 
@@ -54,11 +54,11 @@ This project adopts a **risk-based testing approach**.
 
 | Item | Value |
 |------|-------|
-| Total Tests | 82 |
-| Passed | 81 |
+| Total Tests | 111 |
+| Passed | 110 |
 | Failed | 0 |
 | Skipped | 1 |
-| Execution Time | 0.18s |
+| Execution Time | 0.19s |
 
 ## Coverage Report
 
@@ -67,15 +67,16 @@ This project adopts a **risk-based testing approach**.
 | `__init__.py` | 5 | 0 | 100% |
 | `__main__.py` | 3 | 3 | 0% |
 | `backlog_client.py` | 128 | 33 | 74% |
-| `cli.py` | 29 | 29 | 0% |
+| `cli.py` | 62 | 33 | 47% |
 | `markdown_parser.py` | 76 | 7 | 91% |
 | `mermaid_converter.py` | 71 | 13 | 82% |
 | `uploader.py` | 142 | 38 | 73% |
-| **Total** | **454** | **123** | **73%** |
+| **Total** | **487** | **127** | **74%** |
 
 ### Coverage Notes
 
-- `cli.py`, `__main__.py`: CLI entry points, covered by integration tests
+- `cli.py`: `collect_markdown_files` function is unit tested, `main` function is covered by integration tests
+- `__main__.py`: CLI entry point, covered by integration tests
 - `mermaid_converter.py`: External command (mmdc) dependencies are mocked
 - Core business logic achieves 70%+ coverage
 
@@ -84,13 +85,47 @@ This project adopts a **risk-based testing approach**.
 ```
 tests/
 ├── __init__.py
+├── test_cli.py                # 27 tests (NEW in v1.1.0)
 ├── test_markdown_parser.py    # 17 tests
 ├── test_backlog_client.py     # 22 tests
 ├── test_mermaid_converter.py  # 24 tests
-└── test_uploader.py           # 19 tests
+└── test_uploader.py           # 21 tests
 ```
 
 ## Test Case Details
+
+### test_cli.py (27 tests) - NEW in v1.1.0
+
+#### TestCollectMarkdownFiles (13 tests)
+- `test_single_file` - Single markdown file
+- `test_single_file_non_markdown` - Non-markdown files ignored
+- `test_directory_flat` - Flat directory search
+- `test_directory_recursive` - Recursive directory search
+- `test_directory_non_recursive` - Non-recursive directory search
+- `test_custom_pattern` - Custom file pattern
+- `test_exclude_pattern` - Exclude files by pattern
+- `test_exclude_multiple_patterns` - Multiple exclude patterns
+- `test_empty_directory` - Empty directory handling
+- `test_nonexistent_path` - Non-existent path handling
+- `test_sorted_results` - Results sorted by path
+- `test_deep_nesting` - Deeply nested directories
+- `test_case_insensitive_extension` - Case-insensitive .MD extension
+
+#### TestProgressSpinner (14 tests)
+- `test_init` - Spinner initialization
+- `test_get_progress_bar_empty` - Progress bar at 0%
+- `test_get_progress_bar_half` - Progress bar at 50%
+- `test_get_progress_bar_full` - Progress bar at 100%
+- `test_get_progress_bar_zero_total` - Progress bar with zero total
+- `test_get_percentage_zero` - Percentage at 0%
+- `test_get_percentage_half` - Percentage at 50%
+- `test_get_percentage_full` - Percentage at 100%
+- `test_get_percentage_zero_total` - Percentage with zero total
+- `test_stop_increments_current` - Stop increments current counter
+- `test_stop_success_icon` - Success shows checkmark icon
+- `test_stop_failure_icon` - Failure shows X icon
+- `test_finish_prints_newline` - Finish prints newline
+- `test_spinner_frames_constant` - Spinner frames defined correctly
 
 ### test_markdown_parser.py (17 tests)
 
@@ -161,6 +196,9 @@ tests/
 
 #### TestWikiUploader
 - `test_init` - Initialization
+- `test_init_with_quiet_mode` - Initialization with quiet mode
+- `test_log_outputs_when_not_quiet` - Log output when not quiet
+- `test_log_suppressed_when_quiet` - Log suppressed when quiet
 - `test_init_with_mermaid` - Initialization with Mermaid enabled
 - `test_generate_mermaid_filename` - Filename generation
 - `test_generate_mermaid_filename_unique` - Uniqueness
@@ -285,27 +323,28 @@ jobs:
 
 | Aspect | Rating | Description |
 |--------|--------|-------------|
-| Business Logic | Excellent | Covers core logic (parser, converter, uploader) |
-| Edge Cases | Excellent | Covers empty files, emojis, hierarchical titles, etc. |
+| Business Logic | Excellent | Covers core logic (parser, converter, uploader, CLI) |
+| Edge Cases | Excellent | Covers empty files, emojis, hierarchical titles, deep nesting, etc. |
 | Error Handling | Good | Tests timeout, file not found, API failure |
 | Mock Strategy | Excellent | External dependencies properly mocked, stable in CI/CD |
-| Maintainability | Excellent | 82 tests in 0.18s, fast execution |
+| Maintainability | Excellent | 111 tests in 0.19s, fast execution |
 
 ### Regarding 0% Coverage Files
 
 | File | Coverage | Decision | Reason |
 |------|----------|----------|--------|
-| `cli.py` | 0% | No tests needed | Only argparse definitions and uploader invocation |
 | `__main__.py` | 0% | No tests needed | Only 3 lines calling `cli.main()` |
 
-These are "glue code" and their logic is tested in other modules.
+`__main__.py` is "glue code" and its logic is tested in other modules.
+
+`cli.py` now has 47% coverage after adding the `collect_markdown_files` function in v1.1.0. The `main` function (argparse definitions and uploader invocation) is covered by integration tests.
 
 ### Conclusion
 
 **Current tests ensure appropriate quality.**
 
 - Test design focused on high-risk areas
-- 73% coverage is within industry standard (70-80%)
+- 74% coverage is within industry standard (70-80%)
 - Avoids maintenance cost increase from excessive testing
 
 ---
