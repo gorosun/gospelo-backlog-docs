@@ -4,6 +4,8 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import os
+import io
+import sys
 
 from gospelo_backlog_docs.uploader import (
     WikiUploader,
@@ -93,6 +95,56 @@ class TestWikiUploader:
 
         assert uploader.project_key == "TEST_PROJECT"
         assert uploader.mermaid_available is False
+        assert uploader.quiet is False
+
+    def test_init_with_quiet_mode(self, mock_backlog_client, mock_mermaid_check):
+        """quietモードでの初期化"""
+        uploader = WikiUploader(
+            project_key="TEST_PROJECT",
+            space_id="test-space",
+            api_key="test-key",
+            quiet=True
+        )
+
+        assert uploader.quiet is True
+
+    def test_log_outputs_when_not_quiet(self, mock_backlog_client, mock_mermaid_check):
+        """quietモードでない場合はログを出力"""
+        uploader = WikiUploader(
+            project_key="TEST_PROJECT",
+            space_id="test-space",
+            api_key="test-key",
+            quiet=False
+        )
+
+        captured = io.StringIO()
+        sys.stdout = captured
+
+        uploader._log("Test message")
+
+        sys.stdout = sys.__stdout__
+        output = captured.getvalue()
+
+        assert "Test message" in output
+
+    def test_log_suppressed_when_quiet(self, mock_backlog_client, mock_mermaid_check):
+        """quietモードの場合はログを出力しない"""
+        uploader = WikiUploader(
+            project_key="TEST_PROJECT",
+            space_id="test-space",
+            api_key="test-key",
+            quiet=True
+        )
+
+        captured = io.StringIO()
+        sys.stdout = captured
+
+        uploader._log("Test message")
+
+        sys.stdout = sys.__stdout__
+        output = captured.getvalue()
+
+        assert output == ""
 
     def test_init_with_mermaid(self, mock_backlog_client, mock_mermaid_check):
         """Mermaid CLIがインストールされている場合"""
