@@ -1,6 +1,6 @@
 """Backlog Wiki Uploader - Upload Markdown to Backlog Wiki with images and MermaidJS support."""
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from .uploader import WikiUploader
 from .backlog_client import BacklogClient

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gospelo-backlog-docs"
-version = "1.0.0"
+version = "1.1.0"
 description = "Upload Markdown documents to Backlog Wiki with image and MermaidJS support"
 readme = "README.md"
 license = "MIT"

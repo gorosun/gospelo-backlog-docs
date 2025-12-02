@@ -55,7 +55,8 @@ class WikiUploader:
         space_id: Optional[str] = None,
         api_key: Optional[str] = None,
         domain: Optional[str] = None,
-        env_file: Optional[str] = None
+        env_file: Optional[str] = None,
+        quiet: bool = False
     ):
         """
         Args:
@@ -64,8 +65,10 @@ class WikiUploader:
             api_key: Backlog APIキー
             domain: Backlogドメイン (例: 'backlog.jp')
             env_file: 環境変数ファイルパス
+            quiet: 詳細出力を抑制
         """
         self.project_key = project_key
+        self.quiet = quiet
         self.client = BacklogClient(
             space_id=space_id,
             api_key=api_key,
@@ -76,8 +79,13 @@ class WikiUploader:
 
         # MermaidJS変換が可能か確認
         self.mermaid_available = check_mermaid_cli_installed()
-        if not self.mermaid_available:
+        if not self.mermaid_available and not quiet:
             print("警告: mermaid-cli (mmdc) が見つかりません。MermaidJS図は変換されません。")
+
+    def _log(self, message: str):
+        """quietモードでない場合のみ出力"""
+        if not self.quiet:
+            print(message)
 
     def _generate_mermaid_filename(self, code: str, index: int) -> str:
         """MermaidJSコードからファイル名を生成"""
@@ -117,9 +125,9 @@ class WikiUploader:
 
             if result.success and result.output_path:
                 results.append((block, result.output_path))
-                print(f"  ✓ MermaidJS図 {i+1} を変換: {result.output_path.name}")
+                self._log(f"  ✓ MermaidJS図 {i+1} を変換: {result.output_path.name}")
             else:
-                print(f"  ✗ MermaidJS図 {i+1} の変換に失敗: {result.error_message}")
+                self._log(f"  ✗ MermaidJS図 {i+1} の変換に失敗: {result.error_message}")
 
         return results
 
@@ -156,32 +164,32 @@ class WikiUploader:
             else:
                 wiki_name = markdown_path.stem
 
-        print(f"\n{'='*60}")
-        print(f"Backlog Wiki アップロード")
-        print(f"{'='*60}")
-        print(f"ファイル: {markdown_path}")
-        print(f"プロジェクト: {self.project_key}")
-        print(f"Wiki名: {wiki_name}")
-        print(f"{'='*60}\n")
+        self._log(f"\n{'='*60}")
+        self._log(f"Backlog Wiki アップロード")
+        self._log(f"{'='*60}")
+        self._log(f"ファイル: {markdown_path}")
+        self._log(f"プロジェクト: {self.project_key}")
+        self._log(f"Wiki名: {wiki_name}")
+        self._log(f"{'='*60}\n")
 
-        print("1. Markdownファイルを解析中...")
+        self._log("1. Markdownファイルを解析中...")
         images = parser.get_all_local_images()
         mermaid_blocks = parser.extract_mermaid_blocks()
 
-        print(f"   - ローカル画像: {len(images)} 件")
-        print(f"   - MermaidJS図: {len(mermaid_blocks)} 件")
+        self._log(f"   - ローカル画像: {len(images)} 件")
+        self._log(f"   - MermaidJS図: {len(mermaid_blocks)} 件")
 
         # MermaidJS図を変換
         temp_dir = markdown_path.parent / '.mermaid_temp'
         mermaid_images: list[tuple[MermaidBlock, Path]] = []
 
         if mermaid_blocks and self.mermaid_available:
-            print("\n2. MermaidJS図を変換中...")
+            self._log("\n2. MermaidJS図を変換中...")
             temp_dir.mkdir(exist_ok=True)
             mermaid_images = self._convert_mermaid_blocks(mermaid_blocks, temp_dir)
 
         if dry_run:
-            print("\n[DRY RUN] 実際のアップロードはスキップします")
+            self._log("\n[DRY RUN] 実際のアップロードはスキップします")
             return {
                 'wiki_name': wiki_name,
                 'local_images': len(images),
@@ -190,7 +198,7 @@ class WikiUploader:
             }
 
         # 画像をアップロード
-        print("\n3. 画像をアップロード中...")
+        self._log("\n3. 画像をアップロード中...")
         # パスベースでアップロード済み画像を管理（重複アップロード防止）
         uploaded_by_path: dict[str, Attachment] = {}
         # original_text -> Attachment のマッピング（置換用）
@@ -204,15 +212,15 @@ class WikiUploader:
                     # 新規アップロード
                     attachment = self.client.upload_attachment(img_path)
                     uploaded_by_path[path_key] = attachment
-                    print(f"   ✓ {img_path.name} (ID: {attachment.id})")
+                    self._log(f"   ✓ {img_path.name} (ID: {attachment.id})")
                 else:
                     # 既にアップロード済み
                     attachment = uploaded_by_path[path_key]
-                    print(f"   ✓ {img_path.name} (既存ID: {attachment.id}を再利用)")
+                    self._log(f"   ✓ {img_path.name} (既存ID: {attachment.id}を再利用)")
 
                 uploaded_attachments[img_ref.original_text] = attachment
             except Exception as e:
-                print(f"   ✗ {img_path.name}: {e}")
+                self._log(f"   ✗ {img_path.name}: {e}")
 
         # MermaidJS画像をアップロード
         mermaid_attachments: dict[str, Attachment] = {}
@@ -220,12 +228,12 @@ class WikiUploader:
             try:
                 attachment = self.client.upload_attachment(img_path)
                 mermaid_attachments[block.original_text] = attachment
-                print(f"   ✓ {img_path.name} (ID: {attachment.id})")
+                self._log(f"   ✓ {img_path.name} (ID: {attachment.id})")
             except Exception as e:
-                print(f"   ✗ {img_path.name}: {e}")
+                self._log(f"   ✗ {img_path.name}: {e}")
 
         # Wikiページを作成/更新（まずプレースホルダーで作成）
-        print("\n4. Wikiページを作成/更新中...")
+        self._log("\n4. Wikiページを作成/更新中...")
 
         # コンテンツから絵文字を除去（Backlog APIが絵文字を受け付けないため）
         clean_content = remove_emojis(parser.content)
@@ -238,7 +246,7 @@ class WikiUploader:
         )
 
         action = "作成" if is_new else "更新"
-        print(f"   ✓ Wikiページを{action}しました (ID: {wiki_page.id})")
+        self._log(f"   ✓ Wikiページを{action}しました (ID: {wiki_page.id})")
 
         # 添付ファイルをWikiに紐付け（重複IDを排除）
         unique_attachment_ids = list(set(
@@ -251,23 +259,23 @@ class WikiUploader:
         filename_to_new_attachment_id: dict[str, int] = {}
 
         if all_attachment_ids:
-            print("\n5. 添付ファイルをWikiに紐付け中...")
+            self._log("\n5. 添付ファイルをWikiに紐付け中...")
             try:
                 # 紐付け結果から新しいattachmentIdを取得
                 attached_files = self.client.attach_files_to_wiki(wiki_page.id, all_attachment_ids)
-                print(f"   ✓ {len(all_attachment_ids)} 件の添付ファイルを紐付けました")
+                self._log(f"   ✓ {len(all_attachment_ids)} 件の添付ファイルを紐付けました")
 
                 # 新しいattachmentIdをファイル名でマッピング
                 for attached in attached_files:
                     filename_to_new_attachment_id[attached['name']] = attached['id']
-                    print(f"   - {attached['name']} -> attachmentId: {attached['id']}")
+                    self._log(f"   - {attached['name']} -> attachmentId: {attached['id']}")
 
             except Exception as e:
-                print(f"   ✗ 添付ファイルの紐付けに失敗: {e}")
+                self._log(f"   ✗ 添付ファイルの紐付けに失敗: {e}")
 
         # 新しいattachmentIdでコンテンツを更新
         if filename_to_new_attachment_id:
-            print("\n6. 画像参照を更新中...")
+            self._log("\n6. 画像参照を更新中...")
             # 元のコンテンツから画像参照を置換してから絵文字除去する
             content = parser.content
             replacement_count = 0
@@ -284,7 +292,7 @@ class WikiUploader:
                         content = content.replace(original_text, backlog_image_tag)
                         replacement_count += count
                         if count > 1:
-                            print(f"   - {attachment.name}: {count}箇所を置換")
+                            self._log(f"   - {attachment.name}: {count}箇所を置換")
 
             # MermaidJSブロックをBacklog記法に置換
             for block_text, attachment in mermaid_attachments.items():
@@ -302,7 +310,7 @@ class WikiUploader:
 
             # Wikiページを更新
             self.client.update_wiki(wiki_id=wiki_page.id, content=content)
-            print(f"   ✓ 画像参照を更新しました（計 {replacement_count} 箇所）")
+            self._log(f"   ✓ 画像参照を更新しました（計 {replacement_count} 箇所）")
 
         # 一時ディレクトリをクリーンアップ
         if temp_dir.exists():
@@ -312,11 +320,11 @@ class WikiUploader:
         # 結果を出力
         wiki_url = f"https://{self.client.space_id}.{self.client.domain}/wiki/{self.project_key}/{wiki_name}"
 
-        print(f"\n{'='*60}")
-        print(f"✓ アップロード完了!")
-        print(f"{'='*60}")
-        print(f"Wiki URL: {wiki_url}")
-        print(f"{'='*60}\n")
+        self._log(f"\n{'='*60}")
+        self._log(f"✓ アップロード完了!")
+        self._log(f"{'='*60}")
+        self._log(f"Wiki URL: {wiki_url}")
+        self._log(f"{'='*60}\n")
 
         return {
             'wiki_id': wiki_page.id,
